@@ -1,11 +1,15 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout, get_user_model
+User = get_user_model()
 from django.http import HttpResponse
 from django.shortcuts import render
-from .forms import ContactForm, LoginForm
+from .forms import ContactForm, LoginForm, RegisterForm
 
 
 def home_page(request):
-    context = {'title': 'Home Page!'}
+    context = {
+        'title': 'Home Page!',
+        'premium_content': 'Yeahh'
+    }
     return render(request, 'home_page.html', context)
 
 
@@ -41,18 +45,24 @@ def login_page(request):
         password = login_form.cleaned_data.get('password')
 
         user = authenticate(request, username=username, password=password)
+        print(request.user.is_authenticated)
+        # return HttpResponse('hello')
 
         if user is not None:
             login(request, user)
-            context['form'] = LoginForm()
+            # context['form'] = LoginForm()
         else:
             print("Error")
     return render(request, 'account/login.html', context)
 
 
+
 def register_page(request):
-    form = LoginForm(request.POST or None)
+    form = RegisterForm(request.POST or None)
     if form.is_valid():
         print(form.cleaned_data)
-
-    return render(request, "auth/register.html", form)
+        username = form.cleaned_data.get('username')
+        email = form.cleaned_data.get('email')
+        password = form.cleaned_data.get('password')
+        new_user =  User.objects.create_user(username, email, password)
+    return render(request, "account/register.html", {'form': form})
